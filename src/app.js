@@ -1,3 +1,5 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -13,6 +15,35 @@ import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { createHttpError } from './utils/httpError.js';
 
+const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+const frontendDistPath = path.resolve(currentDirectory, '../frontend/dist');
+const frontendIndexPath = path.join(frontendDistPath, 'index.html');
+
+function createHelmetOptions() {
+  if (!env.SERVE_FRONTEND) {
+    return undefined;
+  }
+
+  return {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        baseUri: ["'self'"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        objectSrc: ["'none'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        upgradeInsecureRequests: env.isProduction ? [] : null,
+      },
+    },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  };
+}
+
 export function createApp() {
   const app = express();
 
@@ -21,7 +52,7 @@ export function createApp() {
   }
 
   app.disable('x-powered-by');
-  app.use(helmet());
+  app.use(helmet(createHelmetOptions()));
   app.use(express.json({ limit: '1mb' }));
 
   app.use(cors({
@@ -71,6 +102,30 @@ export function createApp() {
   app.use('/api/public/sessions/:publicCode/join', joinLimiter);
   app.use('/api/public', publicRouter);
   app.use('/api/guest', guestRouter);
+
+  if (env.SERVE_FRONTEND) {
+    app.use(express.static(frontendDistPath, {
+      index: false,
+      maxAge: env.isProduction ? '1d' : 0,
+      immutable: false,
+    }));
+
+    app.use((req, res, next) => {
+      const isFrontendNavigation = req.method === 'GET'
+        && !req.path.startsWith('/api')
+        && Boolean(req.accepts('html'));
+
+      if (!isFrontendNavigation) {
+        return next();
+      }
+
+      return res.sendFile(frontendIndexPath, (error) => {
+        if (error) {
+          next(error);
+        }
+      });
+    });
+  }
 
   app.use(notFoundHandler);
   app.use(errorHandler);

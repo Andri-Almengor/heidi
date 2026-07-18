@@ -16,7 +16,7 @@
     "frontend:build": "npm --prefix frontend run build",
     "check": "node --check src/server.js && node --check src/app.js && node --test && npm --prefix frontend run build",
     "test": "node --test",
-    "render:build": "npm --prefix frontend install && npm --prefix frontend run build"
+    "render:build": "npm --prefix frontend install --include=dev && npm --prefix frontend run build"
   },
   "dependencies": {
     "cors": "^2.8.5",

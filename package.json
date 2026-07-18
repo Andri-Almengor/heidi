@@ -2,7 +2,7 @@
   "name": "heidi-quiz-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "Backend Node.js y Express para Heidi Quiz, conectado a Google Apps Script y Google Sheets.",
+  "description": "Full-stack Heidi Quiz application with a React/Vite frontend and Node/Express backend connected to Google Apps Script and Sheets.",
   "main": "src/server.js",
   "type": "module",
   "engines": {
@@ -11,7 +11,10 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "check": "node --check src/server.js && node --check src/app.js && node --test",
+    "backend:dev": "node --watch src/server.js",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "check": "node --check src/server.js && node --check src/app.js && node --test && npm --prefix frontend run build",
     "test": "node --test"
   },
   "dependencies": {

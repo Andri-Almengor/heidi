@@ -1,195 +1,143 @@
-# Heidi Quiz Backend
+# Heidi Quiz
 
-Backend REST en **Node.js 20 + Express** para un cuestionario tipo Kahoot sin límite de tiempo. La persistencia y lógica principal están en Google Apps Script y Google Sheets.
+A full-stack, untimed quiz platform inspired by the animated world of **Heidi**.
 
-## Arquitectura
+The project is split into three layers:
 
 ```text
-Frontend futuro
-     |
-     v
-Node.js + Express  --->  Google Apps Script  --->  Google Sheets
-     |
-     +-- conserva APPS_SCRIPT_API_KEY únicamente en el servidor
+React + Vite frontend
+        |
+        v
+Node.js + Express API
+        |
+        v
+Google Apps Script + Google Sheets
 ```
 
-El navegador nunca debe conectarse directamente con Apps Script porque eso expondría la clave privada del backend.
+The frontend never calls Apps Script directly. The private Apps Script API key stays in the Node/Express environment.
 
-## Configuración local
+## Project structure
+
+```text
+heidi/
+  frontend/                React + Vite responsive interface
+  src/                     Node.js + Express backend
+  test/                    Backend tests
+  Dockerfile
+  Procfile
+  package.json
+```
+
+## Frontend
+
+The interface is based directly on the supplied Stitch screens and keeps their:
+
+- responsive 12-column desktop grid and stacked mobile composition
+- fixed administrator sidebar and top application bar
+- landing hero, feature cards, and mobile bottom navigation
+- split authentication screen
+- elevated KPI and dashboard cards
+- session library card layout
+- structured question editor
+- large quiz answer cards
+- live participant progress table and details panel
+
+The visual identity uses Alpine meadow green, sky blue, warm cream, sun yellow, and chalet wood tones. All visible interface copy is in English and themed around Heidi, Grandfather, Peter, Clara, Snowflake, Frankfurt, and life on the Alm.
+
+### Run the frontend
 
 ```bash
-npm install
+cd frontend
 cp .env.example .env
+npm install
 npm run dev
 ```
 
-Complete `.env` con:
+Frontend environment:
 
 ```env
-APPS_SCRIPT_URL=https://script.google.com/macros/s/ID_DEL_DESPLIEGUE/exec
-APPS_SCRIPT_API_KEY=CLAVE_GENERADA_POR_SETUPPROJECT
+VITE_API_URL=http://localhost:3000/api
+VITE_USE_MOCKS=true
 ```
 
-La aplicación inicia por defecto en `http://localhost:3000`.
+Use `VITE_USE_MOCKS=true` to inspect every page with Heidi-themed preview content. Change it to `false` when the backend is running.
 
-## Seguridad
+## Backend
 
-- La API key de Apps Script nunca se devuelve al frontend.
-- `.env` está excluido de Git.
-- Tokens de administrador e invitado se reciben mediante `Authorization: Bearer <token>`.
-- Se aplican Helmet, CORS configurable y limitadores de solicitudes.
-- Apps Script decide si un token es ADMIN o GUEST; no basta con modificar una ruta del frontend.
-- Las respuestas correctas no se entregan en las rutas de invitados.
-
-## Rutas
-
-### Estado
-
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/api/health` | Comprueba backend y Apps Script |
-
-### Administrador
-
-| Método | Ruta |
-|---|---|
-| POST | `/api/admin/login` |
-| POST | `/api/admin/logout` |
-| GET | `/api/admin/me` |
-| POST | `/api/admin/change-password` |
-
-### Preguntas administrativas
-
-| Método | Ruta |
-|---|---|
-| GET | `/api/admin/questions` |
-| GET | `/api/admin/questions/:questionId` |
-| POST | `/api/admin/questions` |
-| PUT | `/api/admin/questions/:questionId` |
-| DELETE | `/api/admin/questions/:questionId` |
-
-Filtros disponibles en el listado:
-
-```text
-?includeInactive=true&search=capital
-```
-
-### Sesiones administrativas
-
-| Método | Ruta |
-|---|---|
-| GET | `/api/admin/sessions` |
-| GET | `/api/admin/sessions/:sessionId` |
-| POST | `/api/admin/sessions` |
-| PATCH | `/api/admin/sessions/:sessionId` |
-| PUT | `/api/admin/sessions/:sessionId/questions` |
-| POST | `/api/admin/sessions/:sessionId/open` |
-| POST | `/api/admin/sessions/:sessionId/close` |
-| DELETE | `/api/admin/sessions/:sessionId` |
-| GET | `/api/admin/sessions/:sessionId/results` |
-| GET | `/api/admin/sessions/:sessionId/participants/:participantId/answers` |
-
-### Acceso público
-
-| Método | Ruta |
-|---|---|
-| GET | `/api/public/sessions/:publicCode` |
-| POST | `/api/public/sessions/:publicCode/join` |
-
-### Participante invitado
-
-| Método | Ruta |
-|---|---|
-| GET | `/api/guest/quiz` |
-| POST | `/api/guest/answers` |
-| GET | `/api/guest/progress` |
-
-## Ejemplos
-
-### Iniciar sesión como administrador
+### Run the backend
 
 ```bash
-curl -X POST http://localhost:3000/api/admin/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"CONTRASENA"}'
+cp .env.example .env
+npm install
+npm run dev
 ```
 
-### Crear pregunta
-
-```bash
-curl -X POST http://localhost:3000/api/admin/questions \
-  -H "Authorization: Bearer TOKEN_ADMIN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "questionText": "¿Cuál es la capital de Costa Rica?",
-    "options": [
-      {"id":"A","text":"Cartago"},
-      {"id":"B","text":"San José"},
-      {"id":"C","text":"Heredia"},
-      {"id":"D","text":"Alajuela"}
-    ],
-    "correctOptionId": "B",
-    "imageUrl": "",
-    "imageContext": ""
-  }'
-```
-
-### Crear sesión
-
-```bash
-curl -X POST http://localhost:3000/api/admin/sessions \
-  -H "Authorization: Bearer TOKEN_ADMIN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Geografía",
-    "description": "Cuestionario de prueba",
-    "questionIds": ["ID_PREGUNTA"]
-  }'
-```
-
-### Unirse como invitado
-
-```bash
-curl -X POST http://localhost:3000/api/public/sessions/CODIGO/join \
-  -H "Content-Type: application/json" \
-  -d '{"guestName":"Andrick"}'
-```
-
-### Responder
-
-```bash
-curl -X POST http://localhost:3000/api/guest/answers \
-  -H "Authorization: Bearer TOKEN_INVITADO" \
-  -H "Content-Type: application/json" \
-  -d '{"questionId":"ID_PREGUNTA","selectedOptionId":"B"}'
-```
-
-## Despliegue
-
-El proyecto incluye:
-
-- `Dockerfile` para Cloud Run, Railway, Render u otro proveedor con contenedores.
-- `Procfile` para plataformas que detectan procesos web.
-- Puerto dinámico mediante `PORT`.
-- `TRUST_PROXY=1` para proveedores detrás de proxy inverso.
-
-Variables obligatorias en producción:
+Backend environment:
 
 ```env
-NODE_ENV=production
-APPS_SCRIPT_URL=...
-APPS_SCRIPT_API_KEY=...
-CORS_ORIGINS=https://dominio-del-frontend.com
-TRUST_PROXY=1
+NODE_ENV=development
+PORT=3000
+APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+APPS_SCRIPT_API_KEY=YOUR_PRIVATE_BACKEND_API_KEY
+CORS_ORIGINS=http://localhost:5173
+APPS_SCRIPT_TIMEOUT_MS=25000
+TRUST_PROXY=0
 ```
 
-## Flujo de estados
+Do not commit the real `.env` file.
+
+## Useful root commands
+
+```bash
+npm run backend:dev
+npm run frontend:dev
+npm run frontend:build
+npm test
+npm run check
+```
+
+## API routes
+
+### Administrator
 
 ```text
-DRAFT -> OPEN -> CLOSED
+POST   /api/admin/login
+POST   /api/admin/logout
+GET    /api/admin/me
+POST   /api/admin/change-password
+
+GET    /api/admin/questions
+GET    /api/admin/questions/:questionId
+POST   /api/admin/questions
+PUT    /api/admin/questions/:questionId
+DELETE /api/admin/questions/:questionId
+
+GET    /api/admin/sessions
+GET    /api/admin/sessions/:sessionId
+POST   /api/admin/sessions
+PATCH  /api/admin/sessions/:sessionId
+PUT    /api/admin/sessions/:sessionId/questions
+POST   /api/admin/sessions/:sessionId/open
+POST   /api/admin/sessions/:sessionId/close
+DELETE /api/admin/sessions/:sessionId
+GET    /api/admin/sessions/:sessionId/results
+GET    /api/admin/sessions/:sessionId/participants/:participantId/answers
 ```
 
-- Solo una sesión `DRAFT` se puede editar o eliminar.
-- Solo una sesión `OPEN` acepta participantes y respuestas.
-- No hay tiempo límite ni límite de participantes.
-- Cada participante puede responder una pregunta una sola vez.
+### Public and guest
+
+```text
+GET  /api/public/sessions/:publicCode
+POST /api/public/sessions/:publicCode/join
+GET  /api/guest/quiz
+POST /api/guest/answers
+GET  /api/guest/progress
+```
+
+## Security
+
+- The Apps Script API key exists only in the backend environment.
+- Administrator and guest tokens are stored separately.
+- Protected routes are validated by the backend and Apps Script, not only by the interface.
+- Correct answers are not returned through guest quiz routes.
+- Submitted guest answers are locked after they are saved.

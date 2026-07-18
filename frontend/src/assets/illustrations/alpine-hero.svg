@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" role="img" aria-labelledby="title desc">
+  <title id="title">Alpine meadow and wooden cabin</title>
+  <desc id="desc">A warm illustrated Alpine landscape with snowy mountains, green hills, a wooden cabin, flowers, and two goats.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#8fd1f2"/><stop offset="1" stop-color="#e8f7ff"/></linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9acb5c"/><stop offset="1" stop-color="#4f8a3c"/></linearGradient>
+  </defs>
+  <rect width="900" height="700" rx="42" fill="url(#sky)"/>
+  <circle cx="735" cy="118" r="60" fill="#f8cf62" opacity=".95"/>
+  <path d="M0 340 180 142l150 166L470 92l225 246 105-118 100 123v125H0Z" fill="#dfe9ef"/>
+  <path d="m128 200 52-58 42 46-24-6-17 22-22-20Z" fill="#fff"/>
+  <path d="m391 180 79-88 82 89-41-18-39 28-30-25Z" fill="#fff"/>
+  <path d="M0 380c170-67 274-17 409-2 144 16 267-42 491-5v327H0Z" fill="url(#grass)"/>
+  <path d="M0 484c155-68 318-23 454 6 130 28 272 12 446-42v252H0Z" fill="#6ca24b" opacity=".75"/>
+  <g transform="translate(520 348)">
+    <path d="M24 82h214v145H24z" fill="#9a623d"/><path d="m0 92 132-82 132 82Z" fill="#6a3e27"/>
+    <rect x="52" y="127" width="52" height="100" rx="4" fill="#5a3525"/><rect x="146" y="125" width="58" height="48" rx="4" fill="#d9f0fb"/>
+    <path d="M28 102h208" stroke="#f2d4a6" stroke-width="8"/><path d="M142 12v-55h31v74" fill="#7b4830"/>
+  </g>
+  <path d="M436 700c-30-117-89-205-194-269" fill="none" stroke="#f7e6bd" stroke-width="32" stroke-linecap="round" opacity=".9"/>
+  <g fill="#fff7de"><circle cx="115" cy="570" r="8"/><circle cx="165" cy="614" r="7"/><circle cx="330" cy="565" r="8"/><circle cx="388" cy="632" r="7"/></g>
+  <g fill="#e55d5d"><circle cx="125" cy="570" r="4"/><circle cx="175" cy="614" r="4"/><circle cx="340" cy="565" r="4"/><circle cx="398" cy="632" r="4"/></g>
+  <g transform="translate(196 466)"><ellipse cx="42" cy="50" rx="42" ry="26" fill="#f8f4e8"/><circle cx="79" cy="42" r="20" fill="#f8f4e8"/><path d="m68 27-8-20 19 15m12 7 12-18-2 24" fill="#f8f4e8" stroke="#75563f" stroke-width="4"/><path d="M22 70v34m30-33v33" stroke="#75563f" stroke-width="8" stroke-linecap="round"/><circle cx="84" cy="39" r="3" fill="#273b2b"/></g>
+  <g transform="translate(306 510) scale(.78)"><ellipse cx="42" cy="50" rx="42" ry="26" fill="#d9c8aa"/><circle cx="79" cy="42" r="20" fill="#d9c8aa"/><path d="m68 27-8-20 19 15m12 7 12-18-2 24" fill="#d9c8aa" stroke="#75563f" stroke-width="4"/><path d="M22 70v34m30-33v33" stroke="#75563f" stroke-width="8" stroke-linecap="round"/><circle cx="84" cy="39" r="3" fill="#273b2b"/></g>
+</svg>

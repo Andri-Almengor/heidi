@@ -16,6 +16,8 @@ const schema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:5173,http://localhost:3000'),
   APPS_SCRIPT_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(25000),
   TRUST_PROXY: booleanFromEnv.default(false),
+  SERVE_FRONTEND: booleanFromEnv.default(false),
+  RENDER_EXTERNAL_HOSTNAME: z.string().trim().optional(),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -32,8 +34,12 @@ const allowedOrigins = parsed.data.CORS_ORIGINS
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+if (parsed.data.RENDER_EXTERNAL_HOSTNAME) {
+  allowedOrigins.push(`https://${parsed.data.RENDER_EXTERNAL_HOSTNAME}`);
+}
+
 export const env = Object.freeze({
   ...parsed.data,
-  allowedOrigins,
+  allowedOrigins: [...new Set(allowedOrigins)],
   isProduction: parsed.data.NODE_ENV === 'production',
 });

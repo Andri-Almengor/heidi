@@ -82,6 +82,7 @@ APPS_SCRIPT_API_KEY=YOUR_PRIVATE_BACKEND_API_KEY
 CORS_ORIGINS=http://localhost:5173
 APPS_SCRIPT_TIMEOUT_MS=25000
 TRUST_PROXY=0
+SERVE_FRONTEND=0
 ```
 
 Do not commit the real `.env` file.
@@ -95,6 +96,33 @@ npm run frontend:build
 npm test
 npm run check
 ```
+
+## Deploy on Render
+
+The repository includes a `render.yaml` Blueprint that deploys the full application as one Render Web Service. Render builds the React/Vite frontend and Express serves both the interface and the API from the same HTTPS domain.
+
+```bash
+npm install
+npm run render:build
+npm start
+```
+
+Render requests these secrets during Blueprint creation:
+
+```env
+APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+APPS_SCRIPT_API_KEY=YOUR_PRIVATE_BACKEND_API_KEY
+```
+
+Production automatically uses:
+
+- Node.js 22.22.0
+- `VITE_API_URL=/api`
+- `VITE_USE_MOCKS=false`
+- `SERVE_FRONTEND=1`
+- health check path `/api/health/live`
+
+See [`RENDER_DEPLOYMENT.md`](./RENDER_DEPLOYMENT.md) for the complete deployment procedure.
 
 ## API routes
 

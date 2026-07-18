@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: heidi-quiz
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    autoDeployTrigger: commit
+    buildCommand: npm install && npm run render:build
+    startCommand: npm start
+    healthCheckPath: /api/health/live
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.0
+      - key: NODE_ENV
+        value: production
+      - key: APPS_SCRIPT_URL
+        sync: false
+      - key: APPS_SCRIPT_API_KEY
+        sync: false
+      - key: APPS_SCRIPT_TIMEOUT_MS
+        value: "25000"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: SERVE_FRONTEND
+        value: "1"

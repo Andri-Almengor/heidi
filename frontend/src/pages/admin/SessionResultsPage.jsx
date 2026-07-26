@@ -43,7 +43,7 @@ export default function SessionResultsPage() {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { const participantId = searchParams.get('participant'); if (participantId) openParticipant(participantId); }, [searchParams, openParticipant]);
-  usePolling(() => load(true), 5000, data?.session?.status === 'OPEN');
+  usePolling(() => load(true), 8000, data?.session?.status === 'OPEN');
 
   const participants = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -70,7 +70,7 @@ export default function SessionResultsPage() {
 
   return (
     <>
-      <PageHeader eyebrow={<><Link to="/admin/sessions">Sessions</Link><span>/</span><Link to={`/admin/sessions/${sessionId}`}>{data.session.title}</Link><span>/</span><span>Results</span></>} title="Participant Progress" description="Live rankings, answer totals, and detailed responses for this Heidi chapter." actions={data.session.status === 'OPEN' ? <span className="badge badge-open"><span className="material-symbols-outlined" style={{ fontSize: 16 }}>sensors</span>Refreshing every 5 seconds</span> : <StatusBadge status={data.session.status} />} />
+      <PageHeader eyebrow={<><Link to="/admin/sessions">Sessions</Link><span>/</span><Link to={`/admin/sessions/${sessionId}`}>{data.session.title}</Link><span>/</span><span>Results</span></>} title="Participant Progress" description="Live rankings, answer totals, and detailed responses for this Heidi chapter." actions={data.session.status === 'OPEN' ? <span className="badge badge-open"><span className="material-symbols-outlined" style={{ fontSize: 16 }}>sensors</span>Refreshing about every 8 seconds</span> : <StatusBadge status={data.session.status} />} />
 
       <section className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4,minmax(0,1fr))' }}>
         <article className="surface-card stat-card"><div className="label-sm uppercase muted">Participants</div><div className="stat-value">{data.summary.participantCount}</div></article>

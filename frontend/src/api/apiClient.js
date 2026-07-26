@@ -19,6 +19,7 @@ const ERROR_MESSAGES = {
   INVALID_OPTION: 'The selected answer is not valid.',
   WEAK_PASSWORD: 'Use at least 10 characters, including uppercase, lowercase, a number, and a symbol.',
   VALIDATION_ERROR: 'Please review the information and try again.',
+  APPS_SCRIPT_BUSY: 'The quiz is handling many requests. Please try again in a moment.',
   APPS_SCRIPT_UNAVAILABLE: 'The quiz service is temporarily unavailable.',
   APPS_SCRIPT_TIMEOUT: 'The quiz service took too long to respond.',
 };

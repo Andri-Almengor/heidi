@@ -1,11 +1,14 @@
+import { createHash } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
 import { callAppsScript } from '../services/appsScriptClient.js';
 import { requireBearerToken } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { TtlCache } from '../utils/ttlCache.js';
 
 export const sessionsRouter = Router();
+const resultsCache = new TtlCache();
 
 const sessionCreateSchema = z.object({
   title: z.string().trim().min(2).max(160),
@@ -23,6 +26,15 @@ const sessionUpdateSchema = z.object({
 const sessionQuestionsSchema = z.object({
   questionIds: z.array(z.string().trim().min(5).max(100)),
 }).strict();
+
+function resultsCacheKey(sessionId, token) {
+  const tokenHash = createHash('sha256').update(token).digest('hex').slice(0, 24);
+  return `${sessionId}:${tokenHash}`;
+}
+
+function invalidateSessionResults(sessionId) {
+  resultsCache.deletePrefix(`${sessionId}:`);
+}
 
 sessionsRouter.use(requireBearerToken);
 
@@ -51,6 +63,7 @@ sessionsRouter.patch('/:sessionId', validate(sessionUpdateSchema), asyncHandler(
     sessionId: req.params.sessionId,
     ...req.body,
   }, req.authToken);
+  invalidateSessionResults(req.params.sessionId);
   res.json({ ok: true, data });
 }));
 
@@ -62,6 +75,7 @@ sessionsRouter.put(
       sessionId: req.params.sessionId,
       questionIds: req.body.questionIds,
     }, req.authToken);
+    invalidateSessionResults(req.params.sessionId);
     res.json({ ok: true, data });
   }),
 );
@@ -70,6 +84,7 @@ sessionsRouter.post('/:sessionId/open', asyncHandler(async (req, res) => {
   const data = await callAppsScript('sessions.open', {
     sessionId: req.params.sessionId,
   }, req.authToken);
+  invalidateSessionResults(req.params.sessionId);
   res.json({ ok: true, data });
 }));
 
@@ -77,6 +92,7 @@ sessionsRouter.post('/:sessionId/close', asyncHandler(async (req, res) => {
   const data = await callAppsScript('sessions.close', {
     sessionId: req.params.sessionId,
   }, req.authToken);
+  invalidateSessionResults(req.params.sessionId);
   res.json({ ok: true, data });
 }));
 
@@ -84,13 +100,18 @@ sessionsRouter.delete('/:sessionId', asyncHandler(async (req, res) => {
   const data = await callAppsScript('sessions.delete', {
     sessionId: req.params.sessionId,
   }, req.authToken);
+  invalidateSessionResults(req.params.sessionId);
   res.json({ ok: true, data });
 }));
 
 sessionsRouter.get('/:sessionId/results', asyncHandler(async (req, res) => {
-  const data = await callAppsScript('sessions.results', {
-    sessionId: req.params.sessionId,
-  }, req.authToken);
+  const key = resultsCacheKey(req.params.sessionId, req.authToken);
+  const data = await resultsCache.getOrCreate(key, 2500, () => callAppsScript(
+    'sessions.results',
+    { sessionId: req.params.sessionId },
+    req.authToken,
+  ));
+  res.setHeader('Cache-Control', 'private, no-store');
   res.json({ ok: true, data });
 }));
 

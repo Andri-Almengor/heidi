@@ -1,4 +1,5 @@
 import { env } from '../config/env.js';
+import { Semaphore } from '../utils/semaphore.js';
 import { createHttpError } from '../utils/httpError.js';
 
 const ERROR_STATUS = Object.freeze({
@@ -41,11 +42,17 @@ const ERROR_STATUS = Object.freeze({
   METHOD_NOT_ALLOWED: 405,
 });
 
+const appsScriptSemaphore = new Semaphore(env.APPS_SCRIPT_MAX_CONCURRENCY);
+
 function statusForAppsScriptError(code) {
   return ERROR_STATUS[code] || 400;
 }
 
 export async function callAppsScript(action, data = {}, token = '') {
+  // Apps Script web apps execute as the deployment owner. Keeping a small
+  // amount of headroom below Google's per-user simultaneous execution quota
+  // prevents bursts from being rejected and turns them into a short queue.
+  const release = await appsScriptSemaphore.acquire();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), env.APPS_SCRIPT_TIMEOUT_MS);
 
@@ -81,9 +88,11 @@ export async function callAppsScript(action, data = {}, token = '') {
 
     if (!response.ok) {
       throw createHttpError(
-        502,
-        'APPS_SCRIPT_HTTP_ERROR',
-        `Apps Script respondió con HTTP ${response.status}.`,
+        response.status === 429 ? 503 : 502,
+        response.status === 429 ? 'APPS_SCRIPT_BUSY' : 'APPS_SCRIPT_HTTP_ERROR',
+        response.status === 429
+          ? 'El servicio de cuestionarios está procesando demasiadas solicitudes. Intente nuevamente.'
+          : `Apps Script respondió con HTTP ${response.status}.`,
       );
     }
 
@@ -115,5 +124,6 @@ export async function callAppsScript(action, data = {}, token = '') {
     );
   } finally {
     clearTimeout(timeout);
+    release();
   }
 }

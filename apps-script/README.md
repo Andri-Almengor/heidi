@@ -1,12 +1,12 @@
 # Apps Script performance upgrade
 
-This folder contains the Google Apps Script source used by Heidi Quiz.
+The optimized Apps Script is distributed as a complete `Code.gs` file in the performance-upgrade package delivered with this release. This repository also contains the configuration and web-entry modules as documentation for the new organization.
 
 ## Apply the upgrade
 
 1. Open the current Heidi Quiz Apps Script project.
-2. Replace the complete contents of `Code.gs` with the optimized `Code.gs` package supplied with this release, or copy the `.gs` modules from this folder into the same Apps Script project.
-3. Remove the old duplicated source before saving.
+2. Replace the complete contents of the existing `Code.gs` with the optimized `Code.gs` from the performance-upgrade package.
+3. Save the project.
 4. Run `migratePerformanceUpgrade()` once from the Apps Script editor.
 5. Authorize the execution if Google requests it.
 6. Create a **new Web App deployment version** using the same access settings:

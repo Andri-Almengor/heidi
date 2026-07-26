@@ -15,6 +15,7 @@ const schema = z.object({
   APPS_SCRIPT_API_KEY: z.string().min(20, 'APPS_SCRIPT_API_KEY no parece válida.'),
   CORS_ORIGINS: z.string().default('http://localhost:5173,http://localhost:3000'),
   APPS_SCRIPT_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(25000),
+  APPS_SCRIPT_MAX_CONCURRENCY: z.coerce.number().int().min(1).max(28).default(20),
   TRUST_PROXY: booleanFromEnv.default(false),
   SERVE_FRONTEND: booleanFromEnv.default(false),
   RENDER_EXTERNAL_HOSTNAME: z.string().trim().optional(),

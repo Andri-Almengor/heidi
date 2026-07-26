@@ -20,9 +20,7 @@ const frontendDistPath = path.resolve(currentDirectory, '../frontend/dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 
 function createHelmetOptions() {
-  if (!env.SERVE_FRONTEND) {
-    return undefined;
-  }
+  if (!env.SERVE_FRONTEND) return undefined;
 
   return {
     contentSecurityPolicy: {
@@ -47,9 +45,7 @@ function createHelmetOptions() {
 export function createApp() {
   const app = express();
 
-  if (env.TRUST_PROXY) {
-    app.set('trust proxy', 1);
-  }
+  if (env.TRUST_PROXY) app.set('trust proxy', 1);
 
   app.disable('x-powered-by');
   app.use(helmet(createHelmetOptions()));
@@ -65,16 +61,18 @@ export function createApp() {
     credentials: true,
   }));
 
-  const generalLimiter = rateLimit({
+  // High enough for classrooms sharing one public IP, while login keeps its
+  // own strict limiter. Static assets are not counted because this is /api only.
+  const generalApiLimiter = rateLimit({
     windowMs: 60_000,
-    limit: 180,
+    limit: 3000,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
   });
 
   const loginLimiter = rateLimit({
     windowMs: 15 * 60_000,
-    limit: 15,
+    limit: 20,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     message: {
@@ -88,12 +86,12 @@ export function createApp() {
 
   const joinLimiter = rateLimit({
     windowMs: 60_000,
-    limit: 30,
+    limit: 600,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
   });
 
-  app.use(generalLimiter);
+  app.use('/api', generalApiLimiter);
   app.use('/api/health', healthRouter);
   app.use('/api/admin/login', loginLimiter);
   app.use('/api/admin', adminRouter);
@@ -106,8 +104,14 @@ export function createApp() {
   if (env.SERVE_FRONTEND) {
     app.use(express.static(frontendDistPath, {
       index: false,
-      maxAge: env.isProduction ? '1d' : 0,
-      immutable: false,
+      etag: true,
+      setHeaders(res, filePath) {
+        if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        } else {
+          res.setHeader('Cache-Control', 'public, max-age=3600');
+        }
+      },
     }));
 
     app.use((req, res, next) => {
@@ -115,20 +119,16 @@ export function createApp() {
         && !req.path.startsWith('/api')
         && Boolean(req.accepts('html'));
 
-      if (!isFrontendNavigation) {
-        return next();
-      }
+      if (!isFrontendNavigation) return next();
 
+      res.setHeader('Cache-Control', 'no-cache');
       return res.sendFile(frontendIndexPath, (error) => {
-        if (error) {
-          next(error);
-        }
+        if (error) next(error);
       });
     });
   }
 
   app.use(notFoundHandler);
   app.use(errorHandler);
-
   return app;
 }
